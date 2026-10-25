@@ -1,0 +1,27 @@
+{
+  "name": "orangehrm-automation",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+  "test": "playwright test",
+  "test:headed": "playwright test --headed",
+  "test:e2e": "playwright test --project=e2e",
+  "test:e2e:headed": "playwright test --project=e2e --headed",
+  "test:api": "playwright test --project=api",
+  "test:qa": "cross-env ENV=qa playwright test",
+  "report": "playwright show-report"
+},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@faker-js/faker": "^10.6.0",
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^26.6.5",
+    "allure-playwright": "^3.14.0",
+    "dotenv": "^18.0.9",
+    "typescript": "^7.0.2"
+  }
+}
