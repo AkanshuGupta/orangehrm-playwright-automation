@@ -14,7 +14,7 @@ type Fixtures = {
   employeeList: EmployeeListPage;
   employee: EmployeeData;
   employeeApi: EmployeeApi;
-   personalDetails: PersonalDetailsPage;
+  personalDetails: PersonalDetailsPage;
   trackEmployee: (empNumber: number | string) => void;
 };
 
@@ -25,8 +25,8 @@ export const test = base.extend<Fixtures>({
   employeeList: async ({ page }, use) => use(new EmployeeListPage(page)),
   personalDetails: async ({ page }, use) => use(new PersonalDetailsPage(page)),
   // Data fixture
-  employee: async ({}, use) => use(buildEmployee()),
-// API fixture
+  employee: async ({ }, use) => use(buildEmployee()),
+  // API fixture
   employeeApi: async ({ request }, use) => use(new EmployeeApi(request)),
 
   trackEmployee: async ({ employeeApi }, use) => {
