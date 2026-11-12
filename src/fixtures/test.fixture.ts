@@ -4,8 +4,11 @@ import { DashboardPage } from '@pages/dashboard.page';
 import { EmployeeFormPage } from '@pages/pim/employee-form.page';
 import { EmployeeListPage } from '@pages/pim/employee-list.page';
 import { EmployeeApi } from '@api/employee.api';
+import { ApiError } from '@api/base.api';
 import { buildEmployee, EmployeeData } from '@data/factories/employee.factory';
 import { PersonalDetailsPage } from '@pages/pim/personal-details.page';
+import { HTTP_NOT_FOUND } from '@config/constants';
+import { logger } from '@utils/logger';
 
 type Fixtures = {
   loginPage: LoginPage;
@@ -32,11 +35,17 @@ export const test = base.extend<Fixtures>({
   trackEmployee: async ({ employeeApi }, use) => {
     const created: Array<number | string> = [];
     await use((empNumber) => created.push(empNumber));
-    // Teardown runs even when the test failed
-    if (created.length) {
-      await employeeApi.deleteEmployees(created).catch(() => {
-        /* already deleted by the test itself, which is fine */
-      });
+
+    for (const empNumber of created) {
+      try {
+        await employeeApi.deleteEmployees([empNumber]);
+      } catch (error) {
+        if (error instanceof ApiError && error.status === HTTP_NOT_FOUND) {
+          logger.warn('Employee was already absent during cleanup', { empNumber });
+          continue;
+        }
+        throw error;
+      }
     }
   },
 });

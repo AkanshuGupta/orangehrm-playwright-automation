@@ -17,6 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        tag: [smoke, regression, api]
         shard: [1, 2]
     env:
       ENV: ${{ inputs.env || 'dev' }}
@@ -32,12 +33,18 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npx playwright test --shard=${{ matrix.shard }}/2
+      - run: npx playwright test --grep "@${{ matrix.tag }}" --grep-invert "@quarantined" --shard=${{ matrix.shard }}/2
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
-          name: blob-report-${{ matrix.shard }}
+          name: blob-report-${{ matrix.tag }}-${{ matrix.shard }}
           path: blob-report
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: allure-results-${{ matrix.tag }}-${{ matrix.shard }}
+          path: allure-results
           retention-days: 7
 
   merge-reports:
@@ -50,6 +57,10 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
       - run: npm ci
       - uses: actions/download-artifact@v4
         with:
@@ -57,8 +68,19 @@ jobs:
           pattern: blob-report-*
           merge-multiple: true
       - run: npx playwright merge-reports --reporter html ./all-blob-reports
+      - uses: actions/download-artifact@v4
+        with:
+          path: allure-results
+          pattern: allure-results-*
+          merge-multiple: true
+      - run: npm run allure:generate
       - uses: actions/upload-artifact@v4
         with:
           name: playwright-report
           path: playwright-report
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report
           retention-days: 14

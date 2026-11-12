@@ -1,8 +1,11 @@
 import { test, expect } from '@fixtures/test.fixture';
 
 test.describe('Employee API', () => {
-  test('create, read and delete an employee', async ({ employeeApi, employee }) => {
+  test('create, read and delete an employee', { tag: '@api' }, async ({
+    employeeApi, employee, trackEmployee,
+  }) => {
     const created = await employeeApi.createEmployee(employee);
+    trackEmployee(created.empNumber);
 
     // Read back by empNumber
     const fetched = await employeeApi.getByEmpNumber(created.empNumber);
@@ -19,7 +22,7 @@ test.describe('Employee API', () => {
     expect(await employeeApi.findByEmployeeId(employee.employeeId)).toHaveLength(0);
   });
 
-  test('unauthenticated request is rejected', async ({ playwright, baseURL }) => {
+  test('unauthenticated request is rejected', { tag: '@api' }, async ({ playwright, baseURL }) => {
     const anon = await playwright.request.newContext({ baseURL, storageState: undefined });
     const res = await anon.get('/web/index.php/api/v2/pim/employees');
     expect(res.status()).toBe(401);

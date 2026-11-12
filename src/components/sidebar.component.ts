@@ -8,10 +8,14 @@ export class Sidebar {
   }
 
   async expectVisible(...names: string[]): Promise<void> {
-    for (const n of names) await expect(this.item(n)).toBeVisible();
+    for (const n of names){ 
+      await expect(this.item(n)).toBeVisible();
+    }
   }
 
   async expectHidden(...names: string[]): Promise<void> {
-    for (const n of names) await expect(this.item(n)).toHaveCount(0);
+    for (const n of names){ 
+      await expect(this.item(n)).toHaveCount(0);
+    }
   }
 }

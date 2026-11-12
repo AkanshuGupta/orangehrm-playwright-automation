@@ -1,7 +1,7 @@
-import { APIRequestContext, APIResponse, expect } from '@playwright/test';
+import { APIRequestContext } from '@playwright/test';
+import { ESS_ROLE_ID } from '@config/constants';
 import { EmployeeData } from '@data/factories/employee.factory';
-
-const BASE = '/web/index.php/api/v2';
+import { BaseApiClient } from '@api/base.api';
 
 export interface ApiEmployee {
   empNumber: number;
@@ -19,44 +19,37 @@ export interface ApiUser {
   employee: { empNumber: number };
 }
 
-export class EmployeeApi {
-  constructor(private readonly request: APIRequestContext) {}
-
-  private async json<T>(res: APIResponse): Promise<T> {
-    expect(res.ok(), `API ${res.url()} returned ${res.status()}`).toBeTruthy();
-    return (await res.json()).data as T;
+export class EmployeeApi extends BaseApiClient {
+  constructor(request: APIRequestContext) {
+    super(request);
   }
 
   // Search by name or employee id; returns an empty array if nothing matches
   async findByEmployeeId(employeeId: string): Promise<ApiEmployee[]> {
-    const res = await this.request.get(`${BASE}/pim/employees`, {
+    const all = await this.get<ApiEmployee[]>('/pim/employees', {
       params: { nameOrId: employeeId, limit: 50, offset: 0 },
     });
-    const all = await this.json<ApiEmployee[]>(res);
     return all.filter((e) => e.employeeId === employeeId);
   }
 
   async getByEmpNumber(empNumber: number | string): Promise<ApiEmployee> {
-    const res = await this.request.get(`${BASE}/pim/employees/${empNumber}`);
-    return this.json<ApiEmployee>(res);
+    return this.get<ApiEmployee>(`/pim/employees/${empNumber}`);
   }
 
   async getPersonalDetails(empNumber: number | string): Promise<ApiEmployee> {
-    const res = await this.request.get(`${BASE}/pim/employees/${empNumber}/personal-details`);
-    return this.json<ApiEmployee>(res);
+    return this.get<ApiEmployee>(`/pim/employees/${empNumber}/personal-details`);
   }
 
   async findUserByUsername(username: string): Promise<ApiUser | undefined> {
-    const res = await this.request.get(`${BASE}/admin/users`, {
+    const users = await this.get<ApiUser[]>('/admin/users', {
       params: { username, limit: 50, offset: 0 },
     });
-    const users = await this.json<ApiUser[]>(res);
     return users.find((u) => u.userName === username);
   }
 
   // Used by tests that need an employee without going through the UI
   async createEmployee(emp: EmployeeData): Promise<ApiEmployee> {
-    const res = await this.request.post(`${BASE}/pim/employees`, {
+    return this.post<ApiEmployee>('/pim/employees', {
       data: {
         firstName: emp.firstName,
         middleName: emp.middleName,
@@ -65,13 +58,23 @@ export class EmployeeApi {
         empPicture: null,
       },
     });
-    return this.json<ApiEmployee>(res);
+  }
+
+  async createEssUser(emp: EmployeeData, empNumber: number): Promise<ApiUser> {
+    return this.post<ApiUser>('/admin/users', {
+      data: {
+        username: emp.username,
+        password: emp.password,
+        status: true,
+        userRoleId: ESS_ROLE_ID,
+        empNumber,
+      },
+    });
   }
 
   async deleteEmployees(empNumbers: Array<number | string>): Promise<void> {
-    const res = await this.request.delete(`${BASE}/pim/employees`, {
+    await this.delete('/pim/employees', {
       data: { ids: empNumbers.map(Number) },
     });
-    expect(res.ok(), `Delete failed with ${res.status()}`).toBeTruthy();
   }
 }

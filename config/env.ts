@@ -20,5 +20,5 @@ export const env = {
     username: required('ADMIN_USERNAME'),
     password: required('ADMIN_PASSWORD'),
   },
-  essDefaultPassword: process.env.ESS_DEFAULT_PASSWORD ?? 'Test@12345',
+  essDefaultPassword: required('ESS_DEFAULT_PASSWORD'),
 };

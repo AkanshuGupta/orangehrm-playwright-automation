@@ -5,14 +5,14 @@ import { env } from '../../config/env';
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
-test('valid admin login lands on dashboard', async ({ page }) => {
+test('valid admin login lands on dashboard', { tag: '@smoke' }, async ({ page }) => {
   const login = new LoginPage(page);
   await login.goto();
   await login.login(env.admin.username, env.admin.password);
   await expect(new DashboardPage(page).heading).toBeVisible();
 });
 
-test('invalid password shows error', async ({ page }) => {
+test('invalid password shows error', { tag: '@regression' }, async ({ page }) => {
   const login = new LoginPage(page);
   await login.goto();
   await login.login(env.admin.username, 'wrong-password');
